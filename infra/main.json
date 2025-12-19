@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "12230074650679738943"
+      "templateHash": "3499904613951141034"
     }
   },
   "parameters": {
@@ -25,15 +25,34 @@
   },
   "resources": [
     {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[format('{0}-law', parameters('environmentName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
+      }
+    },
+    {
       "type": "Microsoft.App/managedEnvironments",
       "apiVersion": "2022-03-01",
       "name": "[parameters('environmentName')]",
       "location": "[parameters('location')]",
       "properties": {
         "appLogsConfiguration": {
-          "destination": "log-analytics"
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', parameters('environmentName'))), '2022-10-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', parameters('environmentName'))), '2022-10-01').primarySharedKey]"
+          }
         }
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', parameters('environmentName')))]"
+      ]
     },
     {
       "type": "Microsoft.App/containerApps",

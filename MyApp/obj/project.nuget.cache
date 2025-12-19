@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "BtCCGHxiogY=",
+  "dgSpecHash": "ZteBrmmDMh8=",
   "success": true,
-  "projectFilePath": "D:\\myapp\\MyApp\\MyApp.csproj",
+  "projectFilePath": "D:\\myapp\\MYAPP\\MyApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.11\\microsoft.aspnetcore.openapi.9.0.11.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"

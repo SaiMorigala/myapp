@@ -30,3 +30,4 @@ D:\myapp\MyApp\obj\Debug\net9.0\refint\MyApp.dll
 D:\myapp\MyApp\obj\Debug\net9.0\MyApp.pdb
 D:\myapp\MyApp\obj\Debug\net9.0\MyApp.genruntimeconfig.cache
 D:\myapp\MyApp\obj\Debug\net9.0\ref\MyApp.dll
+d:\myapp\MyApp\obj\Debug\net9.0\MyApp.sourcelink.json
