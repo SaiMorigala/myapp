@@ -1,0 +1,53 @@
+name: Dev Deploy
+
+on:
+  push:
+    branches:
+      - main  # change to '**' if you want any branch push to trigger
+
+env:
+  RESOURCE_GROUP: rg-myapp-dev
+  LOCATION: eastus
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1️⃣ Checkout code
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2️⃣ Log in to GitHub Container Registry
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # 3️⃣ Build and push Docker image
+    - name: Build and push Docker image
+      run: |
+        OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        IMAGE=ghcr.io/$OWNER/myapp:${{ github.sha }}
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+        # Dockerfile is inside MyApp folder
+        docker build -f MyApp/Dockerfile -t $IMAGE ./MyApp
+        docker push $IMAGE
+
+    # 4️⃣ Azure CLI login
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # 5️⃣ Deploy to Azure using ARM template
+    - name: Deploy to Azure Container App
+      run: |
+        az deployment group create \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --template-file infra/main.json \
+          --parameters infra/parameters.dev.json \
+          image=${{ env.IMAGE }}
