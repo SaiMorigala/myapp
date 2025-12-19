@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - stage
 
 env:
   RESOURCE_GROUP: rg-myapp-dev
