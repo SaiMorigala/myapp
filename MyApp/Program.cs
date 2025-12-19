@@ -3,7 +3,7 @@ var app = builder.Build();
 
 app.MapGet("/weatherforecast", () =>
 {
-    return new[] { "Sunny", "Cloudy", "Rainy" };
+    return new[] { "Sunny", "Cloudy", "Rainy", "Spring" };
 });
 
 // Make the app listen on all network interfaces and port 80
