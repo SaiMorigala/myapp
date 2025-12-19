@@ -6,13 +6,13 @@
       "value": "eastus"
     },
     "environmentName": {
-      "value": "myapp-dev-env"
+      "value": "myapp-env-dev"
     },
     "containerAppName": {
-      "value": "myapp"
+      "value": "myapp-dev"
     },
     "image": {
-      "value": "will-be-overridden"
+      "value": "ghcr.io/saimorigala/myapp:latest"
     }
   }
 }

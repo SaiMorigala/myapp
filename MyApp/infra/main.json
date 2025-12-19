@@ -1,17 +1,9 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "metadata": {
-    "_generator": {
-      "name": "bicep",
-      "version": "0.39.26.7824",
-      "templateHash": "3499904613951141034"
-    }
-  },
   "parameters": {
     "location": {
-      "type": "string",
-      "defaultValue": "eastus"
+      "type": "string"
     },
     "environmentName": {
       "type": "string"
@@ -26,8 +18,8 @@
   "resources": [
     {
       "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "2022-10-01",
-      "name": "[format('{0}-law', parameters('environmentName'))]",
+      "apiVersion": "2023-10-01",
+      "name": "[format('log-{0}', parameters('environmentName'))]",
       "location": "[parameters('location')]",
       "properties": {
         "sku": {
@@ -38,25 +30,22 @@
     },
     {
       "type": "Microsoft.App/managedEnvironments",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2023-10-01",
       "name": "[parameters('environmentName')]",
       "location": "[parameters('location')]",
       "properties": {
         "appLogsConfiguration": {
           "destination": "log-analytics",
           "logAnalyticsConfiguration": {
-            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', parameters('environmentName'))), '2022-10-01').customerId]",
-            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', parameters('environmentName'))), '2022-10-01').primarySharedKey]"
+            "customerId": "[reference(format('Microsoft.OperationalInsights/workspaces/{0}', format('log-{0}', parameters('environmentName'))), '2023-10-01').customerId]",
+            "sharedKey": "[listKeys(format('Microsoft.OperationalInsights/workspaces/{0}', format('log-{0}', parameters('environmentName'))), '2023-10-01').primarySharedKey]"
           }
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', parameters('environmentName')))]"
-      ]
+      }
     },
     {
       "type": "Microsoft.App/containerApps",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2023-10-01",
       "name": "[parameters('containerAppName')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -64,8 +53,10 @@
         "configuration": {
           "ingress": {
             "external": true,
-            "targetPort": 80
-          }
+            "targetPort": 80,
+            "transport": "auto"
+          },
+          "registries": []
         },
         "template": {
           "containers": [
@@ -73,22 +64,23 @@
               "name": "[parameters('containerAppName')]",
               "image": "[parameters('image')]",
               "resources": {
-                "cpu": "0.5",
+                "cpu": 0.5,
                 "memory": "1Gi"
               }
             }
-          ]
+          ],
+          "scale": {
+            "minReplicas": 1,
+            "maxReplicas": 2
+          }
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.App/managedEnvironments', parameters('environmentName'))]"
-      ]
+      }
     }
   ],
   "outputs": {
     "containerAppUrl": {
       "type": "string",
-      "value": "[format('https://{0}.{1}.azurecontainerapps.io', parameters('containerAppName'), parameters('location'))]"
+      "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('containerAppName'))).properties.configuration.ingress.fqdn]"
     }
   }
 }
