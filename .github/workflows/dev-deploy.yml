@@ -30,10 +30,11 @@ jobs:
     # 3️⃣ Build & Push Docker Image
     - name: Build and push Docker image
       run: |
-        IMAGE=ghcr.io/${{ github.repository_owner }}/myapp:${{ github.sha }}
+        IMAGE=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/myapp:${{ github.sha }}
         docker build -t $IMAGE .
         docker push $IMAGE
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
 
     # 4️⃣ Login to Azure
     - name: Azure Login
@@ -56,3 +57,4 @@ jobs:
           --template-file infra/main.json \
           --parameters infra/parameters.dev.json \
           image=${{ env.IMAGE }}
+
