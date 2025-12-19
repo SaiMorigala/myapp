@@ -1,11 +1,8 @@
-name: CI/CD Dev Deployment
+name: CI/CD Deployment
 
+# Trigger on push to any branch (main, dev, feature/*)
 on:
   push:
-    branches:
-      - main
-      - dev
-      - stage
 
 env:
   RESOURCE_GROUP: rg-myapp-dev
@@ -19,43 +16,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repo
+    # 1️⃣ Checkout repository
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2️⃣ Log in to GitHub Container Registry
-    - name: Login to GHCR
+    # 2️⃣ Debug: show repo structure
+    - name: Show repo files
+      run: ls -R
+
+    # 3️⃣ Log in to GHCR
+    - name: Login to GitHub Container Registry
       uses: docker/login-action@v2
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # 3️⃣ Build & push Docker image
+    # 4️⃣ Build & push Docker image
     - name: Build and push Docker image
       run: |
-        # Force lowercase owner for GHCR
+        echo "Current dir: $(pwd)"
+        echo "Listing files in current dir:"
+        ls -l
+
+        # Lowercase owner for GHCR
         OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
         IMAGE=ghcr.io/$OWNER/myapp:${{ github.sha }}
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-        # Build Docker image (Dockerfile is in repo root)
+        # Build Docker image (Dockerfile in repo root)
+        echo "Building Docker image..."
         docker build -f Dockerfile -t $IMAGE .
 
-        # Push to GHCR
+        echo "Pushing Docker image to GHCR..."
         docker push $IMAGE
 
-    # 4️⃣ Azure login
+    # 5️⃣ Azure login
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # 5️⃣ Deploy to Azure Container App
+    # 6️⃣ Deploy to Azure Container App
     - name: Deploy to Azure Container App
       run: |
+        echo "Deploying to Azure..."
+        echo "Resource Group: $RESOURCE_GROUP"
+        echo "Template: $ARM_TEMPLATE"
+        echo "Parameters: $PARAMETERS_FILE"
         az deployment group create \
           --resource-group $RESOURCE_GROUP \
           --template-file $ARM_TEMPLATE \
           --parameters $PARAMETERS_FILE \
-          image=${{ e
+          image=${{ env.IMAGE }}
