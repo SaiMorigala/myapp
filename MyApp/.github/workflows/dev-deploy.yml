@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 env:
   RESOURCE_GROUP: rg-myapp-dev
