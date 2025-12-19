@@ -9,25 +9,27 @@ env:
   RESOURCE_GROUP: rg-myapp-dev
   LOCATION: eastus
   CONTAINER_APP_NAME: myapp
+  ARM_TEMPLATE: infra/main.json
+  PARAMETERS_FILE: infra/parameters.dev.json
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout code
-    - name: Checkout source
-      uses: actions/checkout@v4
+    # 1️⃣ Checkout repository
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     # 2️⃣ Login to GitHub Container Registry
-    - name: Login to GHCR
-      uses: docker/login-action@v3
+    - name: Log in to GHCR
+      uses: docker/login-action@v2
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # 3️⃣ Build & Push Docker Image
+    # 3️⃣ Build and push Docker image
     - name: Build and push Docker image
       run: |
         IMAGE=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/myapp:${{ github.sha }}
@@ -35,27 +37,17 @@ jobs:
         docker push $IMAGE
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-
-
-    # 4️⃣ Login to Azure
+    # 4️⃣ Azure Login
     - name: Azure Login
-      uses: azure/login@v2
+      uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # 5️⃣ Ensure Resource Group exists
-    - name: Create resource group
-      run: |
-        az group create \
-          --name $RESOURCE_GROUP \
-          --location $LOCATION
-
-    # 6️⃣ Deploy ARM template (Container App)
-    - name: Deploy Azure Container App (Dev)
+    # 5️⃣ Deploy to Azure Container App via ARM template
+    - name: Deploy to Azure (Dev)
       run: |
         az deployment group create \
           --resource-group $RESOURCE_GROUP \
-          --template-file infra/main.json \
-          --parameters infra/parameters.dev.json \
+          --template-file $ARM_TEMPLATE \
+          --parameters $PARAMETERS_FILE \
           image=${{ env.IMAGE }}
-
