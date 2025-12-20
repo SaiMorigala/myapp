@@ -100,8 +100,8 @@
   ],
   "outputs": {
     "appUrl": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('containerAppName'))).properties.configuration.ingress.fqdn]"
+        "type": "string",
+        "value": "[concat('https://', reference(resourceId('Microsoft.App/containerApps', parameters('containerAppName'))).latestRevisionFqdn)]"
+        }
     }
-  }
 }
