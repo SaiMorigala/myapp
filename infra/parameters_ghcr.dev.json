@@ -12,10 +12,7 @@
       "value": "myapp-dev"
     },
     "image": {
-      "value": "saimorigalamyappacr.azurecr.io/myapp:latest"
-    },
-    "acrName": {
-      "value": "saimorigalamyappacr"
+      "value": "ghcr.io/saimorigala/myapp:latest"
     }
   }
 }

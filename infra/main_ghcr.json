@@ -13,16 +13,13 @@
     },
     "image": {
       "type": "string"
-    },
-    "acrName": {
-      "type": "string"
     }
   },
   "resources": [
     {
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2023-10-01",
-      "name": "[concat('log-', parameters('environmentName'))]",
+      "name": "[format('log-{0}', parameters('environmentName'))]",
       "location": "[parameters('location')]",
       "properties": {
         "sku": {
@@ -40,8 +37,8 @@
         "appLogsConfiguration": {
           "destination": "log-analytics",
           "logAnalyticsConfiguration": {
-            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', concat('log-', parameters('environmentName'))), '2023-10-01').customerId]",
-            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', concat('log-', parameters('environmentName'))), '2023-10-01').primarySharedKey]"
+            "customerId": "[reference(format('Microsoft.OperationalInsights/workspaces/{0}', format('log-{0}', parameters('environmentName'))), '2023-10-01').customerId]",
+            "sharedKey": "[listKeys(format('Microsoft.OperationalInsights/workspaces/{0}', format('log-{0}', parameters('environmentName'))), '2023-10-01').primarySharedKey]"
           }
         }
       }
@@ -56,26 +53,15 @@
         "configuration": {
           "ingress": {
             "external": true,
-            "targetPort": 80
+            "targetPort": 80,
+            "transport": "auto"
           },
-          "registries": [
-            {
-              "server": "[concat(parameters('acrName'), '.azurecr.io')]",
-              "username": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-01-01-preview').username]",
-              "passwordSecretRef": "acr-password"
-            }
-          ],
-          "secrets": [
-            {
-              "name": "acr-password",
-              "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-01-01-preview').passwords[0].value]"
-            }
-          ]
+          "registries": []
         },
         "template": {
           "containers": [
             {
-              "name": "myapp",
+              "name": "[parameters('containerAppName')]",
               "image": "[parameters('image')]",
               "resources": {
                 "cpu": 0.5,
@@ -92,7 +78,7 @@
     }
   ],
   "outputs": {
-    "appUrl": {
+    "containerAppUrl": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('containerAppName'))).properties.configuration.ingress.fqdn]"
     }
