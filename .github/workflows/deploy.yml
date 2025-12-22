@@ -1,0 +1,111 @@
+name: CI-CD Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  LOCATION: eastus
+  ACR_NAME: saimorigalamyappacr
+  IMAGE_NAME: myapp
+
+jobs:
+  build:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to ACR
+      run: az acr login --name $ACR_NAME
+
+    - name: Build and Push Image
+      id: image
+      run: |
+        IMAGE=$ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
+        docker build -f MyApp/Dockerfile -t $IMAGE ./MyApp
+        docker push $IMAGE
+        echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+  deploy-dev:
+    name: Deploy Dev
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+      RESOURCE_GROUP: rg-myapp-dev
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy ARM (Dev)
+      run: |
+        az deployment group create \
+          --resource-group $RESOURCE_GROUP \
+          --template-file infra/main.json \
+          --parameters infra/parameters.dev.json \
+          image=${{ needs.build.outputs.image }}
+
+  deploy-stage:
+    name: Deploy Stage
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: stage
+
+    env:
+      RESOURCE_GROUP: rg-myapp-stage
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy ARM (Stage)
+      run: |
+        az deployment group create \
+          --resource-group $RESOURCE_GROUP \
+          --template-file infra/main.json \
+          --parameters infra/parameters.stage.json \
+          image=${{ needs.build.outputs.image }}
+
+  deploy-prod:
+    name: Deploy Prod
+    needs: deploy-stage
+    runs-on: ubuntu-latest
+    environment: prod
+
+    env:
+      RESOURCE_GROUP: rg-myapp-prod
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy ARM (Prod)
+      run: |
+        az deployment group create \
+          --resource-group $RESOURCE_GROUP \
+          --template-file infra/main.json \
+          --parameters infra/parameters.prod.json \
+          image=${{ needs.build.outputs.image }}
