@@ -1,0 +1,5 @@
+param location = 'eastus'
+param environmentName = 'myapp-env-dev'
+param containerAppName = 'myapp-dev'
+param image = 'saimorigalamyappacr.azurecr.io/myapp:latest'
+param acrName = 'saimorigalamyappacr'

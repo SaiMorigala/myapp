@@ -16,7 +16,11 @@
     },
     "acrName": {
       "type": "string"
-    }
+    },
+    "b2cClientId": { "type": "string" },
+    "b2cTenantId": { "type": "string" },
+    "b2cDomain": { "type": "string" },
+    "b2cPolicy": { "type": "string" }
   },
   "resources": [
     {
@@ -84,6 +88,13 @@
             {
               "name": "myapp",
               "image": "[parameters('image')]",
+              "env": [
+                { "name": "AzureAdB2C__Instance", "value": "[concat('https://', parameters('b2cDomain'), '/')]"},
+                { "name": "AzureAdB2C__ClientId", "value": "[parameters('b2cClientId')]"},
+                { "name": "AzureAdB2C__TenantId", "value": "[parameters('b2cTenantId')]"},
+                { "name": "AzureAdB2C__Domain", "value": "[parameters('b2cDomain')]"},
+                { "name": "AzureAdB2C__SignUpSignInPolicyId", "value": "[parameters('b2cPolicy')]"}
+              ],
               "resources": {
                 "cpu": 0.5,
                 "memory": "1Gi"
